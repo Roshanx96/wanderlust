@@ -1,34 +1,28 @@
-@Library('Shared') _
 pipeline {
-    agent {label 'Node'}
-    
+    agent any
+
     parameters {
-        string(name: 'FRONTEND_DOCKER_TAG', defaultValue: '', description: 'Frontend Docker tag of the image built by the CI job')
-        string(name: 'BACKEND_DOCKER_TAG', defaultValue: '', description: 'Backend Docker tag of the image built by the CI job')
+        string(name: 'FRONTEND_TAG', description: 'Frontend Docker Image Tag', defaultValue: 'latest')
+        string(name: 'BACKEND_TAG', description: 'Backend Docker Image Tag', defaultValue: 'latest')
+    }
+
+    environment {
+        GITHUB_CREDENTIALS = 'Github-cred'
+        GITHUB_REPO = 'https://github.com/Roshanx96/Wanderlust-Mega-Project.git'
     }
 
     stages {
-        stage("Workspace cleanup"){
-            steps{
-                script{
-                    cleanWs()
-                }
-            }
-        }
-        
-        stage('Git: Code Checkout') {
+        stage('Checkout Code') {
             steps {
-                script{
-                    code_checkout("https://github.com/Roshanx96/Wanderlust-Mega-Project.git","main")
-                }
+                git branch: 'main', credentialsId: "${env.GITHUB_CREDENTIALS}", url: "${env.GITHUB_REPO}"
             }
         }
-        
+
         stage('Verify: Docker Image Tags') {
             steps {
                 script{
-                    echo "FRONTEND_DOCKER_TAG: ${params.FRONTEND_DOCKER_TAG}"
-                    echo "BACKEND_DOCKER_TAG: ${params.BACKEND_DOCKER_TAG}"
+                    echo "FRONTEND_TAG: ${params.FRONTEND_TAG}"
+                    echo "BACKEND_TAG: ${params.BACKEND_TAG}"
                 }
             }
         }
@@ -39,87 +33,40 @@ pipeline {
                 script{
                     dir('kubernetes'){
                         sh """
-                            sed -i -e s/wanderlust-backend-beta.*/wanderlust-backend-beta:${params.BACKEND_DOCKER_TAG}/g backend.yaml
+                            sed -i -e s/wanderlust-backend-beta.*/wanderlust-backend-beta:${params.BACKEND_TAG}/g backend.yaml
                         """
                     }
                     
                     dir('kubernetes'){
                         sh """
-                            sed -i -e s/wanderlust-frontend-beta.*/wanderlust-frontend-beta:${params.FRONTEND_DOCKER_TAG}/g frontend.yaml
+                            sed -i -e s/wanderlust-frontend-beta.*/wanderlust-frontend-beta:${params.FRONTEND_TAG}/g frontend.yaml
                         """
                     }
                     
                 }
             }
         }
-        
-        stage("Git: Code update and push to GitHub"){
-            steps{
-                script{
-                    withCredentials([gitUsernamePassword(credentialsId: 'Github-cred', gitToolName: 'Default')]) {
-                        sh '''
-                        echo "Checking repository status: "
-                        git status
-                    
-                        echo "Adding changes to git: "
-                        git add .
-                        
-                        echo "Commiting changes: "
-                        git commit -m "Updated environment variables"
-                        
-                        echo "Pushing changes to github: "
-                        git push https://github.com/Roshanx96/Wanderlust-Mega-Project.git main
-                    '''
-                    }
-                }
+
+        stage('Commit and Push Changes') {
+            steps {
+                sh '''
+                    git config user.email "jenkins@example.com"
+                    git config user.name "Jenkins CI"
+                    git add kubernetes/frontend.yaml kubernetes/backend.yaml
+                    git commit -m "Update Kubernetes manifests with new Docker tags [CI/CD]"
+                    git push origin main
+                '''
             }
         }
     }
-  post {
+
+    post {
         success {
-            script {
-                emailext attachLog: true,
-                from: 'roshankhopade5339@gmail.com',
-                subject: "Wanderlust Application has been updated and deployed - '${currentBuild.result}'",
-                body: """
-                    <html>
-                    <body>
-                        <div style="background-color: #FFA07A; padding: 10px; margin-bottom: 10px;">
-                            <p style="color: black; font-weight: bold;">Project: ${env.JOB_NAME}</p>
-                        </div>
-                        <div style="background-color: #90EE90; padding: 10px; margin-bottom: 10px;">
-                            <p style="color: black; font-weight: bold;">Build Number: ${env.BUILD_NUMBER}</p>
-                        </div>
-                        <div style="background-color: #87CEEB; padding: 10px; margin-bottom: 10px;">
-                            <p style="color: black; font-weight: bold;">URL: ${env.BUILD_URL}</p>
-                        </div>
-                    </body>
-                    </html>
-            """,
-            to: 'roshankhopade5339@gmail.com',
-            mimeType: 'text/html'
-            }
+                 echo "✅ Wanderlust CD Pipeline Successful"
         }
-      failure {
-            script {
-                emailext attachLog: true,
-                from: 'roshankhopade5339@gmail.com',
-                subject: "Wanderlust Application build failed - '${currentBuild.result}'",
-                body: """
-                    <html>
-                    <body>
-                        <div style="background-color: #FFA07A; padding: 10px; margin-bottom: 10px;">
-                            <p style="color: black; font-weight: bold;">Project: ${env.JOB_NAME}</p>
-                        </div>
-                        <div style="background-color: #90EE90; padding: 10px; margin-bottom: 10px;">
-                            <p style="color: black; font-weight: bold;">Build Number: ${env.BUILD_NUMBER}</p>
-                        </div>
-                    </body>
-                    </html>
-            """,
-            to: 'roshankhopade5339@gmail.com',
-            mimeType: 'text/html'
-            }
+        failure {
+                 echo "❌ Wanderlust CD Pipeline Failed"
+
         }
     }
 }
