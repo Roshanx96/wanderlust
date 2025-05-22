@@ -50,8 +50,6 @@ pipeline {
         stage('Commit and Push Changes') {
             steps {
                 sh '''
-                    git config user.email "jenkins@example.com"
-                    git config user.name "Jenkins CI"
                     git add kubernetes/frontend.yaml kubernetes/backend.yaml
                     git commit -m "Update Kubernetes manifests with new Docker tags [CI/CD]"
                     git push origin main
