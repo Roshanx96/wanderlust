@@ -47,13 +47,25 @@ pipeline {
             }
         }
 
-        stage('Commit and Push Changes') {
-            steps {
-                sh '''
-                    git add kubernetes/frontend.yaml kubernetes/backend.yaml
-                    git commit -m "Update Kubernetes manifests with new Docker tags [CI/CD]"
-                    git push origin main
-                '''
+        stage("Git: Code update and push to GitHub"){
+            steps{
+                script{
+                    withCredentials([gitUsernamePassword(credentialsId: 'Github-cred', gitToolName: 'Default')]) {
+                        sh '''
+                        echo "Checking repository status: "
+                        git status
+                    
+                        echo "Adding changes to git: "
+                        git add .
+                        
+                        echo "Commiting changes: "
+                        git commit -m "Updated environment variables"
+                        
+                        echo "Pushing changes to github: "
+                        git push https://github.com/Roshanx96/Wanderlust-Mega-Project.git main
+                    '''
+                    }
+                }
             }
         }
     }
