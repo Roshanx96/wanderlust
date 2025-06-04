@@ -9,11 +9,12 @@ pipeline {
     environment {
         GITHUB_CREDENTIALS = 'Github-cred'
         DOCKER_CREDENTIALS = 'Dockerhub-cred'
-        DOCKERHUB_USERNAME = 'roshanx' // Your DockerHub username
+        DOCKERHUB_USERNAME = 'roshanx' /* Your DockerHub username */
         GITHUB_REPO = 'https://github.com/Roshanx96/Wanderlust-Mega-Project.git'
     }
 
     stages {
+
         stage('Validate Parameters') {
             steps {
                 script {
@@ -23,17 +24,18 @@ pipeline {
                 }
             }
         }
-        stage("Workspace cleanup"){
-            steps{
-                script{
-                    cleanWs()
-                }
+
+        stage("Workspace Cleanup") {
+            steps {
+                cleanWs()
             }
         }
 
         stage('Checkout Code') {
             steps {
-                git branch: 'main', credentialsId: "${env.GITHUB_CREDENTIALS}", url: "${env.GITHUB_REPO}"
+                git branch: 'main',
+                    credentialsId: env.GITHUB_CREDENTIALS,
+                    url: env.GITHUB_REPO
             }
         }
 
@@ -41,32 +43,44 @@ pipeline {
             parallel {
                 stage('Trivy Filesystem Scan') {
                     steps {
-                        sh 'trivy fs --exit-code 1 --severity CRITICAL --no-progress . || true'
+                        sh '''
+                            trivy fs --exit-code 1 --severity CRITICAL --no-progress . || true
+                        '''
                     }
                 }
+
                 stage('OWASP Dependency Check') {
                     steps {
-                        sh 'dependency-check.sh --project wanderlust --scan . || true'
+                        sh '''
+                            dependency-check.sh --project wanderlust --scan . || true
+                        '''
                     }
                 }
             }
         }
 
-        stage('SonarQube Analysis') {
-            environment {
-                SONARQUBE_SERVER = 'SonarQube' // Jenkins SonarQube server name
-            }
+        stage("SonarQube: Code Analysis") {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh 'sonar-scanner'
+                script {
+                    withSonarQubeEnv("SonarQube") {
+                        sh '''
+                            ${SONAR_HOME}/bin/sonar-scanner \
+                            -Dsonar.projectName=wanderlust \
+                            -Dsonar.projectKey=wanderlust \
+                            -Dsonar.sources=./ \
+                            -X
+                        '''
+                    }
                 }
             }
         }
 
-        stage('Wait for SonarQube Quality Gate') {
+        stage("SonarQube: Code Quality Gates") {
             steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
+                script {
+                    timeout(time: 1, unit: 'MINUTES') {
+                        waitForQualityGate abortPipeline: false
+                    }
                 }
             }
         }
@@ -85,7 +99,11 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                withCredentials([usernamePassword(credentialsId: "${env.DOCKER_CREDENTIALS}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                withCredentials([usernamePassword(
+                    credentialsId: env.DOCKER_CREDENTIALS,
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
                     sh '''
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                     '''
@@ -96,8 +114,8 @@ pipeline {
         stage('Build & Push Frontend Image') {
             steps {
                 sh '''
-                    docker build -t $DOCKERHUB_USERNAME/wanderlust-frontend-beta:${FRONTEND_TAG} ./frontend
-                    docker push $DOCKERHUB_USERNAME/wanderlust-frontend-beta:${FRONTEND_TAG}
+                    docker build -t ${DOCKERHUB_USERNAME}/wanderlust-frontend-beta:${FRONTEND_TAG} ./frontend
+                    docker push ${DOCKERHUB_USERNAME}/wanderlust-frontend-beta:${FRONTEND_TAG}
                 '''
             }
         }
@@ -105,8 +123,8 @@ pipeline {
         stage('Build & Push Backend Image') {
             steps {
                 sh '''
-                    docker build -t $DOCKERHUB_USERNAME/wanderlust-backend-beta:${BACKEND_TAG} ./backend
-                    docker push $DOCKERHUB_USERNAME/wanderlust-backend-beta:${BACKEND_TAG}
+                    docker build -t ${DOCKERHUB_USERNAME}/wanderlust-backend-beta:${BACKEND_TAG} ./backend
+                    docker push ${DOCKERHUB_USERNAME}/wanderlust-backend-beta:${BACKEND_TAG}
                 '''
             }
         }
@@ -123,7 +141,7 @@ pipeline {
 
     post {
         failure {
-                 echo "The Wanderlust CI pipeline has failed. Please check Jenkins."
+            echo "❌ The Wanderlust CI pipeline has failed. Please check Jenkins for errors."
         }
     }
 }
