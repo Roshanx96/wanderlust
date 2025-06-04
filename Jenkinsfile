@@ -23,6 +23,13 @@ pipeline {
                 }
             }
         }
+        stage("Workspace cleanup"){
+            steps{
+                script{
+                    cleanWs()
+                }
+            }
+        }
 
         stage('Checkout Code') {
             steps {
