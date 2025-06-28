@@ -20,50 +20,46 @@ pipeline {
 
         stage('Verify: Docker Image Tags') {
             steps {
-                script{
+                script {
                     echo "FRONTEND_TAG: ${params.FRONTEND_TAG}"
                     echo "BACKEND_TAG: ${params.BACKEND_TAG}"
                 }
             }
         }
-        
-        
-        stage("Update: Kubernetes manifests"){
-            steps{
-                script{
-                    dir('kubernetes'){
-                        sh """
-                            sed -i -e s/wanderlust-backend-beta.*/wanderlust-backend-beta:${params.BACKEND_TAG}/g backend.yaml
-                        """
-                    }
-                    
-                    dir('kubernetes'){
-                        sh """
-                            sed -i -e s/wanderlust-frontend-beta.*/wanderlust-frontend-beta:${params.FRONTEND_TAG}/g frontend.yaml
-                        """
-                    }
-                    
+
+        stage("Update: Kubernetes manifests") {
+            steps {
+                dir('kubernetes') {
+                    sh """
+                        echo "Updating backend image tag..."
+                        sed -i -E 's|(wanderlust-backend-beta:).*|\\1${params.BACKEND_TAG}|' backend.yaml
+
+                        echo "Updating frontend image tag..."
+                        sed -i -E 's|(wanderlust-frontend-beta:).*|\\1${params.FRONTEND_TAG}|' frontend.yaml
+                    """
                 }
             }
         }
 
-        stage("Git: Code update and push to GitHub"){
-            steps{
-                script{
-                    withCredentials([gitUsernamePassword(credentialsId: 'Github-cred', gitToolName: 'Default')]) {
-                        sh '''
-                        echo "Checking repository status: "
-                        git status
-                    
-                        echo "Adding changes to git: "
-                        git add .
-                        
-                        echo "Commiting changes: "
-                        git commit -m "Updated environment variables"
-                        
-                        echo "Pushing changes to github: "
-                        git push https://github.com/Roshanx96/Wanderlust-Mega-Project.git main
-                    '''
+        stage("Git: Code update and push to GitHub") {
+            steps {
+                dir('kubernetes') {
+                    script {
+                        withCredentials([gitUsernamePassword(credentialsId: 'Github-cred', gitToolName: 'Default')]) {
+                            sh '''
+                                echo "Checking repository status:"
+                                git status
+
+                                echo "Adding changes to Git:"
+                                git add .
+
+                                echo "Committing changes (if any):"
+                                git commit -m "Updated image tags in Kubernetes manifests" || echo "⚠️ No changes to commit."
+
+                                echo "Pushing changes to GitHub:"
+                                git push https://github.com/Roshanx96/Wanderlust-Mega-Project.git main
+                            '''
+                        }
                     }
                 }
             }
@@ -72,11 +68,10 @@ pipeline {
 
     post {
         success {
-                 echo "✅ Wanderlust CD Pipeline Successful"
+            echo "✅ Wanderlust CD Pipeline Successful"
         }
         failure {
-                 echo "❌ Wanderlust CD Pipeline Failed"
-
+            echo "❌ Wanderlust CD Pipeline Failed"
         }
     }
 }
