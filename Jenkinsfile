@@ -9,7 +9,8 @@ pipeline {
     environment {
         GITHUB_CREDENTIALS = 'Github-cred'
         DOCKER_CREDENTIALS = 'Dockerhub-cred'
-        DOCKERHUB_USERNAME = 'roshanx' /* Your DockerHub username */
+        DOCKERHUB_USERNAME = 'roshanx' // Your DockerHub username
+        SONAR_HOME = tool "SonarQube"
         GITHUB_REPO = 'https://github.com/Roshanx96/Wanderlust-Mega-Project.git'
     }
 
@@ -51,36 +52,44 @@ pipeline {
 
                 stage('OWASP Dependency Check') {
                     steps {
-                        sh '''
-                            dependency-check.sh --project wanderlust --scan . || true
-                        '''
+                        script {
+                            // Check if dependency-check.sh exists
+                            def exists = sh(script: 'which dependency-check.sh || true', returnStdout: true).trim()
+                            if (exists) {
+                                sh 'dependency-check.sh --project wanderlust --scan . || true'
+                            } else {
+                                echo '⚠️ OWASP Dependency Check skipped: dependency-check.sh not found.'
+                            }
+                        }
                     }
                 }
             }
         }
 
-        stage("SonarQube: Code Analysis") {
+        stage('Check Sonar') {
             steps {
-                script {
-                    withSonarQubeEnv("SonarQube") {
-                        sh '''
-                            ${SONAR_HOME}/bin/sonar-scanner \
-                            -Dsonar.projectName=wanderlust \
-                            -Dsonar.projectKey=wanderlust \
-                            -Dsonar.sources=./ \
-                            -X
-                        '''
-                    }
+                sh 'echo SONAR_HOME="$SONAR_HOME"'
+                sh '$SONAR_HOME/bin/sonar-scanner --version'
+            }
+        }
+
+        stage('SonarQube: Code Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        ${SONAR_HOME}/bin/sonar-scanner \
+                        -Dsonar.projectKey=wanderlust \
+                        -Dsonar.projectName=wanderlust \
+                        -Dsonar.sources=.
+                    '''
                 }
             }
         }
 
-        stage("SonarQube: Code Quality Gates") {
+        stage('SonarQube: Quality Gate') {
             steps {
-                script {
-                    timeout(time: 1, unit: 'MINUTES') {
-                        waitForQualityGate abortPipeline: false
-                    }
+                timeout(time: 1, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }
