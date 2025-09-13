@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+    parameters {
+        string(name: 'FRONTEND_TAG', defaultValue: 'latest', description: 'Docker tag for frontend')
+        string(name: 'BACKEND_TAG', defaultValue: 'latest', description: 'Docker tag for backend')
+    }
+    environment {
+        GIT_CREDENTIALS = credentials('github-credentials') // Set up in Jenkins
+    }
+    stages {
+        stage('Validate Parameters') {
+            steps {
+                script {
+                    if (!params.FRONTEND_TAG?.trim()) {
+                        error("FRONTEND_TAG parameter is required.")
+                    }
+                    if (!params.BACKEND_TAG?.trim()) {
+                        error("BACKEND_TAG parameter is required.")
+                    }
+                }
+            }
+        }
+        stage('Checkout') {
+            steps {
+                git url: 'https://github.com/Roshanx96/wanderlust.git', branch: 'main', credentialsId: "${GIT_CREDENTIALS}"
+            }
+        }
+        stage('Update Kubernetes Manifests') {
+            steps {
+                script {
+                    // Update frontend image tag
+                    sh """
+                        sed -i 's|image: roshanx/wanderlust-frontend:[^ ]*|image: roshanx/wanderlust-frontend:${params.FRONTEND_TAG}|g' kubernetes/frontend-deployment.yaml
+                        sed -i 's|image: roshanx/wanderlust-backend:[^ ]*|image: roshanx/wanderlust-backend:${params.BACKEND_TAG}|g' kubernetes/backend-deployment.yaml
+                    """
+                }
+            }
+        }
+        stage('Commit & Push Changes') {
+            steps {
+                script {
+                    sh """
+                        git add kubernetes/frontend-deployment.yaml kubernetes/backend-deployment.yaml
+                        git commit -m 'Update image tags: frontend=${params.FRONTEND_TAG}, backend=${params.BACKEND_TAG}'
+                        git push origin main
+                    """
+                }
+            }
+        }
+    }
+    post {
+        failure {
+            echo 'CD pipeline failed.'
+        }
+        success {
+            echo 'CD pipeline completed successfully.'
+        }
+    }
+}
