@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./backend/.env.docker
+    restart: unless-stopped
+    networks:
+      - wanderlust-net
+    depends_on:
+      - redis
+      - mongodb
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    restart: unless-stopped
+    networks:
+      - wanderlust-net
+    depends_on:
+      - backend
+
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - wanderlust-net
+    volumes:
+      - redis-data:/data
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    restart: unless-stopped
+    networks:
+      - wanderlust-net
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  redis-data:
+  mongo-data:
+
+networks:
+  wanderlust-net:
+    driver: bridge
