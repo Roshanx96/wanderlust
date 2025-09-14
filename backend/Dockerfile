@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Install dependencies (cache package.json and lock file)
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
-RUN npm ci --prefer-offline
+RUN npm ci --prefer-offline || npm install --prefer-offline
 
 # Copy source files
 COPY . .
