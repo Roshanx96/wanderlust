@@ -40,10 +40,17 @@ pipeline {
             steps {
                 script {
                     sh """
+                        git config user.name 'Jenkins CI'
+                        git config user.email 'jenkins@yourdomain.com'
                         git add kubernetes/frontend-deployment.yaml kubernetes/backend-deployment.yaml
-                        git commit -m 'Update image tags: frontend=${params.FRONTEND_TAG}, backend=${params.BACKEND_TAG}'
-                        git push origin main
+                        git commit -m 'Update image tags: frontend=${params.FRONTEND_TAG}, backend=${params.BACKEND_TAG}' || true
                     """
+                    withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+                        sh '''
+                            git remote set-url origin https://$GIT_USER:$GIT_TOKEN@github.com/Roshanx96/wanderlust.git
+                            git push origin main
+                        '''
+                    }
                 }
             }
         }
