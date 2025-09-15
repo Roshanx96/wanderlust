@@ -19,7 +19,7 @@ spec:
         - name: frontend
           image: roshanx/wanderlust-frontend:latest # Replace with your registry image
           ports:
-            - containerPort: 5173
+            - containerPort: 80
           resources:
             requests:
               cpu: "100m"
