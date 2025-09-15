@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: roshanx/wanderlust-backend:v1 # Replace with your registry image
+          image: roshanx/wanderlust-backend:latest # Replace with your registry image
           ports:
             - containerPort: 8080
           resources:

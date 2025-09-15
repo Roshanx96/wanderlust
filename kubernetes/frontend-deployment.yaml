@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: roshanx/wanderlust-frontend:v1 # Replace with your registry image
+          image: roshanx/wanderlust-frontend:latest # Replace with your registry image
           ports:
             - containerPort: 80
           resources:
