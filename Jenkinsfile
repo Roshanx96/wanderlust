@@ -6,7 +6,6 @@ pipeline {
     }
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') // Set up in Jenkins
-        SONARQUBE_SERVER = 'SonarQube' // Set up in Jenkins
     }
     stages {
         stage('Validate Parameters') {
@@ -34,37 +33,80 @@ pipeline {
                     }
                 }
                 stage('OWASP Dependency Check') {
-                    steps {
-                        sh 'dependency-check.sh --project wanderlust --scan . || true'
-                    }
+                steps {
+                script {
+                    /* 1. LOAD THE TOOL
+                       We use the specific name 'OWASP-Dependency-Check' that you configured
+                       in Manage Jenkins > Tools. This sets the path to the executable.
+                    */
+                    def depCheckHome = tool 'OWASP-Dependency-Check'
+                    
+                    /* 2. RUN THE SCAN
+                       - --project flask-app: Sets the name of the project in the report.
+                       - --scan .: Scans the current directory.
+                       - --format ALL: Generates XML (required for Jenkins Sidebar) AND HTML (for download).
+                       - (Removed --noupdate): Allows the tool to download the vulnerability database.
+                    */
+                    sh "${depCheckHome}/bin/dependency-check.sh --project flask-app --scan . --format ALL"
                 }
             }
+            post {
+                always {
+                    /* 3. PUBLISH TO SIDEBAR
+                       This reads the 'dependency-check-report.xml' file generated above
+                       and creates the "Dependency-Check" link/graph on the Jenkins sidebar.
+                    */
+                    dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+                    
+                    /* 4. ARCHIVE ARTIFACTS
+                       This saves the 'dependency-check-report.html' file so you can 
+                       download it manually from the "Build Artifacts" section.
+                    */
+                    archiveArtifacts allowEmptyArchive: true, artifacts: 'dependency-check-report.html'
+                }
+               }
+             }
+           }
         }
+
         stage('SonarQube Analysis') {
-            environment {
-                SONAR_TOKEN = credentials('SonarQube') // Set up in Jenkins
-            }
             steps {
-                // Ensure sonar-scanner is installed in user directory and update PATH
-                                sh '''
-                                        export SONAR_SCANNER_HOME="$HOME/.sonar-scanner"
-                                        if ! [ -x "$SONAR_SCANNER_HOME/bin/sonar-scanner" ]; then
-                                            wget -O sonar-scanner-cli-5.0.1.3006-linux.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-                                            rm -rf sonar-scanner-5.0.1.3006-linux
-                                            unzip -o sonar-scanner-cli-5.0.1.3006-linux.zip
-                                            mv sonar-scanner-5.0.1.3006-linux "$SONAR_SCANNER_HOME"
-                                        fi
-                                        export PATH="$SONAR_SCANNER_HOME/bin:$PATH"
-                                '''
-                // Add sonar-scanner to PATH for the analysis step
-                withEnv(["PATH=$HOME/.sonar-scanner/bin:$PATH"]) {
-                    withSonarQubeEnv("${SONARQUBE_SERVER}") {
-                        sh 'sonar-scanner -Dsonar.projectKey=wanderlust -Dsonar.sources=. -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN'
+                script {
+                    /* 1. TOOL DEFINITION
+                       We manually define the scanner home because the 'tools {}' block 
+                       doesn't work with some plugin versions. 
+                       'SonarScanner' must match the Name in Manage Jenkins > Tools.
+                    */
+                    def scannerHome = tool name: 'SonarScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+                    
+                    /* 2. SERVER CONNECTION
+                       withSonarQubeEnv('SonarQube'):
+                       - 'SonarQube' matches the Name in Manage Jenkins > System.
+                       - This automatically injects:
+                            $SONAR_HOST_URL (Server URL)
+                            $SONAR_AUTH_TOKEN (Login Token)
+                       - You DO NOT need to pass -Dsonar.host.url manually.
+                    */
+                    withSonarQubeEnv('SonarQube') {
+                        
+                        /* 3. THE SCAN COMMAND
+                           -Dsonar.projectKey:  Unique ID for this project in SonarQube (Required).
+                           -Dsonar.projectName: Friendly name displayed on the dashboard (Optional).
+                           -Dsonar.sources:     Where the code is located. '.' means current directory (Required).
+                        */
+                        sh """
+                        ${scannerHome}/bin/sonar-scanner \
+                        -Dsonar.projectKey=wanderlust \
+                        -Dsonar.projectName='wanderlust Application' \
+                        -Dsonar.sources=.
+                        """
                     }
                 }
             }
         }
-        stage('Quality Gate') {
+
+
+        stage('Wait for SonarQube Quality Gate') {
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
