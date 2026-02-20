@@ -47,7 +47,7 @@ pipeline {
                        - --format ALL: Generates XML (required for Jenkins Sidebar) AND HTML (for download).
                        - (Removed --noupdate): Allows the tool to download the vulnerability database.
                     */
-                    sh "${depCheckHome}/bin/dependency-check.sh --project flask-app --scan . --format ALL"
+                    sh "${depCheckHome}/bin/dependency-check.sh --project wanderlust-app --scan . --format ALL"
                 }
             }
             post {
