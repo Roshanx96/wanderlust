@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mongodb
-  namespace: wanderlust-ns
+  namespace: wanderlust
   labels:
     app: wanderlust-mongodb
 spec:
