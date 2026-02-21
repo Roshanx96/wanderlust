@@ -5,6 +5,9 @@
 #  --create-namespace
 
 
+#Access with LoadBalancer:
+#Frontend: http://ae42926bd682a47d68475a9e04425cc4-1120037993.us-east-1.elb.amazonaws.com
+#Backend API: http://ae42926bd682a47d68475a9e04425cc4-1120037993.us-east-1.elb.amazonaws.com/api
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
