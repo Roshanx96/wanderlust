@@ -54,4 +54,7 @@ spec:
                   name: wanderlust-secrets
                   key: jwt-secret
             - name: MONGODB_URI
-              value: "mongodb://$(DB_USER):$(DB_PASS)@$(DB_HOST):$(DB_PORT)/wanderlustdb?authSource=admin"
+              valueFrom:
+                secretKeyRef:
+                  name: wanderlust-secrets
+                  key: mongodb-uri
