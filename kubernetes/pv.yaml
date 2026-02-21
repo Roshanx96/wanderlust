@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: mongo-pv
-  namespace: wanderlust-ns
+  namespace: wanderlust
 spec:
   capacity:
     storage: 5Gi
@@ -16,6 +16,7 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: redis-pv
+  namespace: wanderlust
 spec:
   capacity:
     storage: 1Gi
