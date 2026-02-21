@@ -1,3 +1,10 @@
+#Access with NodePort:
+# Get worker node IP
+#kubectl get nodes -o wide
+
+# Access via NodePort
+#http://<worker-node-public-ip>:30080
+# e.g., http://ec2-54-123-456-789.us-east-1.compute.amazonaws.com:30080
 apiVersion: v1
 kind: Service
 metadata:
