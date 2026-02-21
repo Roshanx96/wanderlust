@@ -4,16 +4,34 @@ metadata:
   name: wanderlust-ingress
   namespace: wanderlust
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
 spec:
+  ingressClassName: nginx
   rules:
-    - host: wanderlust.local
-      http:
+    - http:
         paths:
-          - path: /?(.*)
+          # Frontend - React/Vue app
+          - path: /
             pathType: Prefix
             backend:
               service:
                 name: frontend
                 port:
                   number: 5173
+          # Backend API routes
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
+          # Health check endpoint
+          - path: /health
+            pathType: Exact
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
