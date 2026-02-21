@@ -4,7 +4,7 @@ metadata:
   name: frontend
   labels:
     app: wanderlust-frontend
-  namespace: wanderlust-ns
+  namespace: wanderlust
 spec:
   type: NodePort
   selector:
