@@ -1,12 +1,12 @@
 
 #====================================================================================
+#🧱 PART 1 — Installing the Ingress Controller
 #helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 #helm repo update
 #helm install ingress-nginx ingress-nginx/ingress-nginx \
 #  --namespace ingress-nginx \
 #  --create-namespace
 #====================================================================================
-
 # Helm installs:
 # Deployment → NGINX controller pods
 # Service → Usually type LoadBalancer
@@ -19,6 +19,20 @@
 #Access with LoadBalancer:
 #Frontend: http://ae42926bd682a47d68475a9e04425cc4-1120037993.us-east-1.elb.amazonaws.com
 #Backend API: http://ae42926bd682a47d68475a9e04425cc4-1120037993.us-east-1.elb.amazonaws.com/api
+
+
+#🧾 PART 2 — Creating Ingress Rules (wanderlust-ingress) ⚠️This does NOT install anything. This just creates routing rules⚠️
+#🔥 How They Work Together
+#Step 1 — Internet Traffic Comes | Browser → LoadBalancer IP
+
+#That LoadBalancer was created by the ingress controller.
+
+# Step 2 — Traffic Hits NGINX Controller
+# The controller checks: Do I have any Ingress rules? ||  It finds: wanderlust-ingress (in namespace wanderlust)
+
+# Step 3 — It Reads Your Rules
+#You defined: Rule 1 → /  → frontend:5173
+
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
