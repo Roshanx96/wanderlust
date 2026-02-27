@@ -1,8 +1,19 @@
+
+#====================================================================================
 #helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 #helm repo update
 #helm install ingress-nginx ingress-nginx/ingress-nginx \
 #  --namespace ingress-nginx \
 #  --create-namespace
+#====================================================================================
+
+# Helm installs:
+# Deployment → NGINX controller pods
+# Service → Usually type LoadBalancer
+# ConfigMaps
+# RBAC roles
+# Webhook
+# This creates a real NGINX reverse proxy inside Kubernetes.
 
 
 #Access with LoadBalancer:
