@@ -9,7 +9,7 @@
 #====================================================================================
 # Helm installs:
 # Deployment → NGINX controller pods
-# Service → Usually type LoadBalancer
+# Service → Usually type LoadBalancer Client --> AWS Load Balancer --> Worker Nodes (NodePort) --> NGINX Ingress Pod --> Kubernetes Service (frontend/backend) --> Application Pods
 # ConfigMaps
 # RBAC roles
 # Webhook
