@@ -39,4 +39,4 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy:
   hostPath:
-    path: /mnt/data/mssql
+    path: /mnt/data/mssql-data
