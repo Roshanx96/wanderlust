@@ -56,7 +56,7 @@ spec:
                 port:
                   number: 5173
           # Frontend - Admin panel
-          - path: /admin
+          - path: /RCM
             pathType: Prefix
             backend:
               service:
@@ -64,7 +64,7 @@ spec:
                 port:
                   number: 5173
         # Frontend - User profile
-          - path: /profile
+          - path: /UDM
             pathType: Prefix
             backend:
               service:
@@ -73,7 +73,7 @@ spec:
                   number: 5173
 
           # Backend API routes
-          - path: /api
+          - path: /SAM
             pathType: Prefix
             backend:
               service:
@@ -81,7 +81,7 @@ spec:
                 port:
                   number: 8080
           # Health check endpoint
-          - path: /health
+          - path: /IFM
             pathType: Exact
             backend:
               service:
