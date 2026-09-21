@@ -1,0 +1,61 @@
+application:
+  name: ecommerce-api
+  version: "1.4.2"
+  environment: production
+  debug: false
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  timeout: 30s
+
+database:
+  engine: postgresql
+  host: "db-prod.internal"
+  port: 5432
+  name: ecommerce
+  username: app_user
+  password: "change-me"
+  pool:
+    min: 5
+    max: 20
+
+aws:
+  region: ap-south-1
+  s3:
+    bucket: ecommerce-prod-assets
+    path: uploads/
+  cloudwatch:
+    enabled: true
+    log_group: /ecommerce/api
+
+redis:
+  enabled: true
+  host: "redis.internal"
+  port: 6379
+  database: 0
+  ttl: 3600
+
+logging:
+  level: INFO
+  format: json
+  file: /var/log/ecommerce/app.log
+
+features:
+  payment_gateway: true
+  email_notifications: true
+  sms_notifications: false
+  maintenance_mode: false
+
+security:
+  enable_https: true
+  jwt_expiry: 3600
+  max_login_attempts: 5
+
+monitoring:
+  health_check:
+    enabled: true
+    endpoint: /health
+  metrics:
+    enabled: true
+    endpoint: /metrics
