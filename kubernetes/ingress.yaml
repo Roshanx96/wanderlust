@@ -55,6 +55,23 @@ spec:
                 name: frontend
                 port:
                   number: 5173
+          # Frontend - Admin panel
+          - path: /admin
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 5173
+        # Frontend - User profile
+          - path: /profile
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 5173
+
           # Backend API routes
           - path: /api
             pathType: Prefix
