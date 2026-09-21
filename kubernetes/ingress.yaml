@@ -81,7 +81,7 @@ spec:
                 port:
                   number: 8080
           # Health check endpoint
-          - path: /IFM
+          - path: /CDD
             pathType: Exact
             backend:
               service:
