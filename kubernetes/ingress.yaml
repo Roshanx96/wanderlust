@@ -79,7 +79,7 @@ spec:
               service:
                 name: backend
                 port:
-                  number: 8080
+                  number: 8000
           # Health check endpoint
           - path: /CDD
             pathType: Exact
