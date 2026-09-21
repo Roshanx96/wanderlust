@@ -87,4 +87,4 @@ spec:
               service:
                 name: backend
                 port:
-                  number: 8080
+                  number: 8081
