@@ -81,7 +81,7 @@ spec:
                 port:
                   number: 8080
           # Health check endpoint
-          - path: /XH
+          - path: /XHH
             pathType: Exact
             backend:
               service:
