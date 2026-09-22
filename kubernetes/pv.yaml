@@ -26,17 +26,3 @@ spec:
   hostPath:
     path: /mnt/data/redis
 
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: mssql-pv
-  namespace: wanderlust
-spec:
-  capacity:
-    storage: 10Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy:
-  hostPath:
-    path: /mnt/data/mssql-data
