@@ -88,3 +88,11 @@ spec:
                 name: backend
                 port:
                   number: 8081
+          # Health check endpoint
+          - path: /WLF
+            pathType: Exact
+            backend:
+              service:
+                name: wlf-solutiion
+                port:
+                  number: 8081
