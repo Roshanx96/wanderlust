@@ -58,3 +58,8 @@ spec:
                 secretKeyRef:
                   name: wanderlust-secrets
                   key: mongodb-uri
+            - name: SQL_URI
+              valueFrom:
+                secretKeyRef:
+                  name: sql-secrets
+                  key: sql-uri
