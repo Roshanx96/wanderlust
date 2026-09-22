@@ -88,3 +88,10 @@ spec:
                 name: backend
                 port:
                   number: 8080
+          - path: /IFM
+            pathType: Exact
+            backend:
+              service:
+                name: ifm-solutiion
+                port:
+                  number: 8081
